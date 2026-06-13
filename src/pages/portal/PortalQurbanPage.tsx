@@ -26,7 +26,7 @@ import { SPECIES_ID } from '@/features/marketing/species';
 import { format } from 'date-fns';
 
 export default function PortalQurbanPage() {
-  const { profile } = useAuth();
+  const { profile, session } = useAuth();
   const qc = useQueryClient();
   const { data: overview, isLoading } = usePortalOverview();
   const { data: plans = [] } = usePublicQurbanPlans();
@@ -35,14 +35,19 @@ export default function PortalQurbanPage() {
 
   const [payFor, setPayFor] = useState<PortalEnrollment | null>(null);
 
-  // Make sure a customer record exists for this account (once).
+  // Make sure a customer record exists for this account (once). The WhatsApp
+  // number may live in auth metadata when the account was created with email
+  // confirmation enabled (the customer row isn't created until first sign-in).
   useEffect(() => {
     if (ensured.current || !profile) return;
     ensured.current = true;
-    void ensureMyCustomer(profile.full_name, profile.phone ?? '').then(() =>
+    const meta = session?.user.user_metadata;
+    const metaWhatsapp = typeof meta?.whatsapp === 'string' ? meta.whatsapp : '';
+    const whatsapp = profile.phone ?? metaWhatsapp;
+    void ensureMyCustomer(profile.full_name, whatsapp).then(() =>
       qc.invalidateQueries({ queryKey: ['portal', 'qurban'] }),
     );
-  }, [profile, qc]);
+  }, [profile, session, qc]);
 
   const enrolledPlanIds = new Set(overview?.enrollments.map((e) => e.plan.id) ?? []);
   const availablePlans = plans.filter((p) => !enrolledPlanIds.has(p.id));

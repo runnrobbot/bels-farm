@@ -38,12 +38,14 @@ export default function RegisterPage() {
 
   const onSubmit = async (values: FormValues) => {
     try {
-      const { session } = await authService.signUp(values.email, values.password, values.full_name);
+      const { session } = await authService.signUp(values.email, values.password, values.full_name, values.whatsapp);
       if (session) {
         // No email confirmation required — set up the customer record and enter.
         await ensureMyCustomer(values.full_name, values.whatsapp);
         void navigate(paths.portalQurban, { replace: true });
       } else {
+        // Email confirmation is ON: the WhatsApp number is kept in the user's
+        // auth metadata and persisted to a customer record on first portal load.
         setCheckEmail(true);
       }
     } catch (error) {

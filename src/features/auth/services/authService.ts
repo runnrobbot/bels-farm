@@ -17,11 +17,15 @@ export const authService = {
     return data;
   },
 
-  async signUp(email: string, password: string, fullName: string) {
+  async signUp(email: string, password: string, fullName: string, whatsapp?: string) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: {
+        data: { full_name: fullName, whatsapp: whatsapp ?? '' },
+        // After clicking the confirmation link, return the user to the portal.
+        emailRedirectTo: `${window.location.origin}/portal/qurban`,
+      },
     });
     if (error) throw toAppError(error);
     return data;
