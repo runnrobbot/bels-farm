@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { PiggyBank, Plus, CheckCircle2, Clock, Upload, Loader2 } from 'lucide-react';
+import { PiggyBank, Plus, CheckCircle2, Clock, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
@@ -16,7 +16,6 @@ import {
 } from '@/features/portal/service';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useQueryClient } from '@tanstack/react-query';
-import { uploadPrivateImage } from '@/lib/storage';
 import { payWithMidtrans } from '@/lib/midtrans';
 import { printReceipt } from '@/features/portal/printReceipt';
 import { env } from '@/config/env';
@@ -219,26 +218,9 @@ function PaymentModal({ enrollment, onClose }: { enrollment: PortalEnrollment; o
   const qc = useQueryClient();
   const [amount, setAmount] = useState(enrollment.plan.installment_amount?.toString() ?? '');
   const [method, setMethod] = useState('Transfer Bank');
-  const [proof, setProof] = useState('');
-  const [uploading, setUploading] = useState(false);
   const [paying, setPaying] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const remaining = Math.max(0, Number(enrollment.plan.target_amount) - Number(enrollment.paid_confirmed));
-
-  const handleProof = async (file: File | undefined) => {
-    if (!file) return;
-    setUploading(true);
-    try {
-      const path = await uploadPrivateImage(file, enrollment.id);
-      setProof(path);
-      toast.success('Bukti terunggah');
-    } catch (error) {
-      toast.fromError(error, 'Gagal mengunggah bukti');
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const numericAmount = () => {
     const value = Number(amount);
@@ -252,7 +234,10 @@ function PaymentModal({ enrollment, onClose }: { enrollment: PortalEnrollment; o
   const handleManual = () => {
     const value = numericAmount();
     if (value == null) return;
-    submit.mutate({ enrollmentId: enrollment.id, amount: value, method, proof }, { onSuccess: onClose });
+    submit.mutate(
+      { enrollmentId: enrollment.id, amount: value, method, proof: '' },
+      { onSuccess: onClose },
+    );
   };
 
   const handleMidtrans = async () => {
@@ -322,7 +307,7 @@ function PaymentModal({ enrollment, onClose }: { enrollment: PortalEnrollment; o
         )}
 
         <div className="rounded-lg border border-border bg-surface-sunken p-3">
-          <p className="mb-2 text-xs font-medium text-muted-foreground">Atau transfer manual:</p>
+          <p className="mb-2 text-xs font-medium text-muted-foreground">Atau catat transfer manual:</p>
           <Field label="Metode">
             <Select
               value={method}
@@ -334,24 +319,9 @@ function PaymentModal({ enrollment, onClose }: { enrollment: PortalEnrollment; o
               ]}
             />
           </Field>
-          <div className="mt-3">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => void handleProof(e.target.files?.[0])}
-            />
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={uploading}
-              className="inline-flex items-center gap-2 rounded-lg border border-input px-3 py-2 text-sm text-foreground hover:bg-muted"
-            >
-              {uploading ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
-              {proof ? 'Bukti terunggah ✓' : 'Unggah bukti transfer'}
-            </button>
-          </div>
+          <p className="mt-2 text-2xs text-muted-foreground">
+            Setoran manual akan ditinjau dan dikonfirmasi oleh admin sebelum masuk ke progres tabungan Anda.
+          </p>
         </div>
       </div>
     </Modal>

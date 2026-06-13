@@ -28,7 +28,7 @@ interface Participant {
 const SPECIES_ID: Record<Species, string> = { cattle: 'Sapi', goat: 'Kambing', sheep: 'Domba' };
 
 export function QurbanParticipants() {
-  const { data = [], isLoading } = useQuery({
+  const { data = [], isLoading, isError } = useQuery({
     queryKey: ['qurban', 'participants'],
     queryFn: async (): Promise<Participant[]> => {
       const { data, error } = await supabase.rpc('qurban_enrollment_summary');
@@ -110,6 +110,16 @@ export function QurbanParticipants() {
           <Skeleton key={i} className="h-12" />
         ))}
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <EmptyState
+        icon={Users}
+        title="Gagal memuat peserta"
+        description="Tidak dapat mengambil data peserta. Pastikan migrasi database terbaru (0023) sudah diterapkan, lalu muat ulang halaman."
+      />
     );
   }
 

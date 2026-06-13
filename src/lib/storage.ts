@@ -60,22 +60,17 @@ export async function uploadPublicImage(
 }
 
 /**
- * Upload an image to a private bucket and return only its storage path (no
- * public URL). Used for sensitive files like qurban transfer proofs, which
- * staff view through signed URLs.
+ * Create a short-lived signed URL for a file in a private bucket so staff can
+ * preview sensitive uploads (e.g. legacy qurban transfer proofs). Returns null
+ * when the path is empty or doesn't point to an actual stored image.
  */
-export async function uploadPrivateImage(
-  file: File,
-  folder: string,
+export async function signedPrivateUrl(
+  path: string | null | undefined,
   bucket = 'qurban-proofs',
-): Promise<string> {
-  const blob = await compressToWebp(file);
-  const path = `${folder}/${crypto.randomUUID()}.webp`;
-  const { error } = await supabase.storage.from(bucket).upload(path, blob, {
-    cacheControl: '3600',
-    contentType: 'image/webp',
-    upsert: false,
-  });
-  if (error) throw toAppError(error);
-  return path;
+  expiresIn = 300,
+): Promise<string | null> {
+  if (!path || !/\.(webp|png|jpe?g)$/i.test(path)) return null;
+  const { data, error } = await supabase.storage.from(bucket).createSignedUrl(path, expiresIn);
+  if (error) return null;
+  return data.signedUrl;
 }
