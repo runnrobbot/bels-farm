@@ -2,6 +2,8 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useArticle } from '@/features/marketing/hooks';
 import { Pill } from '@/features/marketing/components/shared';
+import { Seo } from '@/components/site/Seo';
+import { SITE } from '@/features/marketing/site';
 import { paths } from '@/app/routes/paths';
 import { format } from 'date-fns';
 
@@ -26,6 +28,24 @@ export default function ArticleDetailPage() {
 
   return (
     <article className="mx-auto max-w-3xl px-5 pb-24 pt-32 sm:px-8 sm:pt-40">
+      <Seo
+        title={article.title}
+        description={article.excerpt ?? undefined}
+        path={`/articles/${article.slug}`}
+        type="article"
+        image={article.cover_path ?? undefined}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Article',
+          headline: article.title,
+          description: article.excerpt ?? undefined,
+          image: article.cover_path ?? undefined,
+          datePublished: article.published_at ?? undefined,
+          articleSection: article.category,
+          author: { '@type': 'Organization', name: SITE.name },
+          publisher: { '@type': 'Organization', name: SITE.name },
+        }}
+      />
       <Link to={paths.articles} className="inline-flex items-center gap-1.5 text-sm text-site-ink-soft transition-colors hover:text-site-ink">
         <ArrowLeft className="size-4" /> Artikel
       </Link>

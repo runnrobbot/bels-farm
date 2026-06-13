@@ -1,6 +1,7 @@
 import { ClipboardList, Wallet, CalendarCheck, PartyPopper, ArrowUpRight } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
 import { Reveal } from '@/components/site/Reveal';
+import { Seo } from '@/components/site/Seo';
 import { usePublicQurbanPlans } from '@/features/marketing/hooks';
 import { SectionHeading, SiteButton, Pill } from '@/features/marketing/components/shared';
 import { SPECIES_ID } from '@/features/marketing/species';
@@ -20,6 +21,11 @@ export default function QurbanPage() {
 
   return (
     <>
+      <Seo
+        title="Tabungan Qurban"
+        description="Program tabungan qurban cicilan ringan di BELS FARM — daftar online, bayar bertahap, dipantau sampai hari raya."
+        path="/qurban"
+      />
       <PageHero
         eyebrow="Tabungan Qurban"
         title="Menabung sekarang, qurban dengan tenang"

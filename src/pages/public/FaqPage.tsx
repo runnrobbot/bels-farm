@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
+import { Seo } from '@/components/site/Seo';
 import { SiteButton } from '@/features/marketing/components/shared';
 import { waMessage, WA_PRESETS } from '@/features/marketing/site';
 import { expandHeight } from '@/lib/animation/motion';
@@ -65,6 +66,20 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 export default function FaqPage() {
   return (
     <>
+      <Seo
+        title="FAQ — Pertanyaan yang Sering Diajukan"
+        description="Jawaban seputar pembelian ternak, jaminan kesehatan, Tabungan Qurban, pengiriman, dan pembayaran di BELS FARM."
+        path="/faq"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: FAQS.map((f) => ({
+            '@type': 'Question',
+            name: f.q,
+            acceptedAnswer: { '@type': 'Answer', text: f.a },
+          })),
+        }}
+      />
       <PageHero
         eyebrow="FAQ"
         title="Pertanyaan yang sering diajukan"

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Newspaper, ArrowUpRight } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
 import { Reveal } from '@/components/site/Reveal';
+import { Seo } from '@/components/site/Seo';
 import { useArticles } from '@/features/marketing/hooks';
 import { Pill } from '@/features/marketing/components/shared';
 import { paths } from '@/app/routes/paths';
@@ -23,6 +24,11 @@ export default function ArticlesPage() {
 
   return (
     <>
+      <Seo
+        title="Artikel & Edukasi Peternakan"
+        description="Tips memilih, merawat, dan memahami ternak sapi, kambing, dan domba dari BELS FARM."
+        path="/articles"
+      />
       <PageHero
         eyebrow="Artikel & Edukasi"
         title="Wawasan seputar peternakan"

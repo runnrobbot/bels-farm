@@ -1,6 +1,7 @@
 import { Sprout, HeartHandshake, BadgeCheck, ArrowUpRight } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
 import { Reveal } from '@/components/site/Reveal';
+import { Seo } from '@/components/site/Seo';
 import { SectionHeading, SiteButton } from '@/features/marketing/components/shared';
 import { SITE } from '@/features/marketing/site';
 import { paths } from '@/app/routes/paths';
@@ -14,6 +15,7 @@ const VALUES = [
 export default function AboutPage() {
   return (
     <>
+      <Seo title="Tentang Kami" path="/about" />
       <PageHero
         eyebrow="Tentang Kami"
         title={`Beternak dengan hati, dikelola dengan data`}

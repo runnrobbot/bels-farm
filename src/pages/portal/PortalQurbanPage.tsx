@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { PiggyBank, Plus, CheckCircle2, Clock, Upload, Loader2, Receipt } from 'lucide-react';
+import { PiggyBank, Plus, CheckCircle2, Clock, Upload, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
@@ -188,7 +188,7 @@ function EnrollmentCard({
                     className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs text-site-moss-dark hover:bg-site-moss-soft"
                     aria-label="Cetak kuitansi"
                   >
-                    <Receipt className="size-3.5" /> Kuitansi
+                    Kuitansi
                   </button>
                 )}
               </span>
@@ -258,7 +258,7 @@ function PaymentModal({ enrollment, onClose }: { enrollment: PortalEnrollment; o
       const outcome = await payWithMidtrans({ enrollmentId: enrollment.id, amount: value });
       await qc.invalidateQueries({ queryKey: ['portal', 'qurban'] });
       if (outcome === 'success') {
-        toast.success('Terima kasih! 🎉', 'Pembayaran berhasil. Semoga qurban Anda berkah dan diterima.');
+        toast.success('Terima kasih!', 'Pembayaran berhasil. Semoga qurban Anda berkah dan diterima.');
         onClose();
       } else if (outcome === 'pending') {
         toast.info('Menunggu pembayaran', 'Selesaikan sesuai instruksi. Status akan diperbarui otomatis.');

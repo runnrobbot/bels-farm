@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { Phone, Instagram, MapPin, Clock, Send } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
 import { Reveal } from '@/components/site/Reveal';
+import { Seo } from '@/components/site/Seo';
 import { SITE, waMessage } from '@/features/marketing/site';
 
 const schema = z.object({
@@ -49,6 +50,7 @@ export default function ContactPage() {
 
   return (
     <>
+      <Seo title="Kontak" description="Hubungi BELS FARM untuk pembelian ternak, qurban, dan aqiqah." path="/contact" />
       <PageHero
         eyebrow="Kontak"
         title="Mari bicara"

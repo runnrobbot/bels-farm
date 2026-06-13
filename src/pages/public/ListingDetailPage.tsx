@@ -4,6 +4,7 @@ import { ArrowLeft, Scale, Calendar, Palette, Dna, MessageCircle, ShieldCheck } 
 import { paths } from '@/app/routes/paths';
 import { useListing } from '@/features/marketing/hooks';
 import { Pill, SiteButton } from '@/features/marketing/components/shared';
+import { Seo } from '@/components/site/Seo';
 import { SPECIES_ID } from '@/features/marketing/species';
 import { waMessage, WA_PRESETS } from '@/features/marketing/site';
 import { formatCurrency, formatWeight } from '@/lib/utils';
@@ -49,6 +50,36 @@ export default function ListingDetailPage() {
 
   return (
     <section className="mx-auto max-w-6xl px-5 pb-24 pt-32 sm:px-8 sm:pt-40">
+      <Seo
+        title={animal.title}
+        description={
+          animal.listing_description ??
+          `${SPECIES_ID[animal.species]} ${animal.breed_name ?? ''} berkualitas dari BELS FARM.`.trim()
+        }
+        path={paths.listing(animal.id)}
+        image={mainImage ?? undefined}
+        type="website"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: animal.title,
+          description: animal.listing_description ?? undefined,
+          image: images.length > 0 ? images : undefined,
+          category: SPECIES_ID[animal.species],
+          brand: { '@type': 'Brand', name: 'BELS FARM' },
+          ...(animal.listing_price != null && {
+            offers: {
+              '@type': 'Offer',
+              price: animal.listing_price,
+              priceCurrency: 'IDR',
+              availability:
+                animal.status === 'reserved'
+                  ? 'https://schema.org/PreOrder'
+                  : 'https://schema.org/InStock',
+            },
+          }),
+        }}
+      />
       <Link to={paths.catalog} className="inline-flex items-center gap-1.5 text-sm text-site-ink-soft transition-colors hover:text-site-ink">
         <ArrowLeft className="size-4" /> Katalog
       </Link>

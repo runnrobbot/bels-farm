@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PiggyBank, Package, Inbox } from 'lucide-react';
+import { PiggyBank, Package, Inbox, Users } from 'lucide-react';
 import { z } from 'zod';
 import { CrudListPage } from '@/components/data/CrudListPage';
 import type { Column } from '@/components/data/DataTable';
@@ -7,6 +7,7 @@ import type { FieldDef } from '@/components/data/CrudFormModal';
 import { Badge } from '@/components/ui/Badge';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { QurbanApprovals } from '@/features/qurban/Approvals';
+import { QurbanParticipants } from '@/features/qurban/Participants';
 import { createResource } from '@/lib/crud/resource';
 import { createResourceHooks } from '@/lib/crud/useResource';
 import { useAuth } from '@/features/auth/AuthProvider';
@@ -96,9 +97,10 @@ function PlansTab() {
   );
 }
 
-type Tab = 'plans' | 'approvals';
+type Tab = 'plans' | 'participants' | 'approvals';
 const TABS: { key: Tab; label: string; icon: typeof Package }[] = [
   { key: 'plans', label: 'Paket', icon: Package },
+  { key: 'participants', label: 'Peserta', icon: Users },
   { key: 'approvals', label: 'Persetujuan Setoran', icon: Inbox },
 ];
 
@@ -126,6 +128,11 @@ export default function QurbanPage() {
 
       {tab === 'plans' ? (
         <PlansTab />
+      ) : tab === 'participants' ? (
+        <div>
+          <PageHeader title="Peserta Tabungan Qurban" description="Daftar peserta, paket yang diikuti, dan progres setorannya." />
+          <QurbanParticipants />
+        </div>
       ) : (
         <div>
           <PageHeader title="Persetujuan Setoran" description="Konfirmasi atau tolak setoran tabungan qurban dari pelanggan." />

@@ -1,5 +1,6 @@
 import { Star, Quote, MessagesSquare } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
+import { Seo } from '@/components/site/Seo';
 import { Reveal } from '@/components/site/Reveal';
 import { useTestimonials } from '@/features/marketing/hooks';
 import { SiteButton } from '@/features/marketing/components/shared';
@@ -10,6 +11,11 @@ export default function TestimonialsPage() {
 
   return (
     <>
+      <Seo
+        title="Testimoni Pelanggan"
+        description="Cerita dan pengalaman pelanggan BELS FARM dalam membeli ternak sapi, kambing, dan domba berkualitas."
+        path="/testimonials"
+      />
       <PageHero
         eyebrow="Testimoni"
         title="Cerita dari pelanggan kami"

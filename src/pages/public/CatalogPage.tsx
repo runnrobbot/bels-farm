@@ -8,6 +8,7 @@ import { SiteButton } from '@/features/marketing/components/shared';
 import { SPECIES_ID, SPECIES_LIST } from '@/features/marketing/species';
 import { Reveal } from '@/components/site/Reveal';
 import { PageHero } from '@/components/site/PageHero';
+import { Seo } from '@/components/site/Seo';
 import type { Species } from '@/types/database';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +26,11 @@ export default function CatalogPage() {
 
   return (
     <>
+      <Seo
+        title="Katalog Ternak"
+        description="Telusuri sapi, kambing, dan domba yang tersedia di BELS FARM — lengkap dengan bobot dan informasi transparan."
+        path="/catalog"
+      />
       <PageHero
         eyebrow="Katalog Ternak"
         title="Sapi, kambing & domba pilihan"

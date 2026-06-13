@@ -7,6 +7,7 @@ import { useCatalog, useTestimonials, useArticles } from '@/features/marketing/h
 import { ListingCard } from '@/features/marketing/components/ListingCard';
 import { SectionHeading, SiteButton, Pill } from '@/features/marketing/components/shared';
 import { Reveal } from '@/components/site/Reveal';
+import { Seo } from '@/components/site/Seo';
 import { useCountUp } from '@/hooks/useCountUp';
 import { useParallax } from '@/hooks/useParallax';
 import { anime, prefersReducedMotion } from '@/lib/animation/motion';
@@ -57,6 +58,7 @@ export default function HomePage() {
 
   return (
     <>
+      <Seo path="/" />
       {/* ───────────────────────── Hero ───────────────────────── */}
       <section className="relative overflow-hidden pt-32 sm:pt-40">
         <div ref={blobRef} className="pointer-events-none absolute -left-40 -top-24 size-[28rem] rounded-full bg-site-moss-soft blur-3xl" />

@@ -672,6 +672,7 @@ export type Database = {
       my_qurban_overview: { Args: Record<string, never>; Returns: Json };
       qurban_pending_payments: { Args: Record<string, never>; Returns: Json };
       qurban_confirm_payment: { Args: { p_id: string; p_approve: boolean }; Returns: undefined };
+      qurban_enrollment_summary: { Args: Record<string, never>; Returns: Json };
     };
     Enums: {
       species: Species;

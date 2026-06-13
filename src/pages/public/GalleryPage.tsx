@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { X, Image as ImageIcon } from 'lucide-react';
 import { PageHero } from '@/components/site/PageHero';
+import { Seo } from '@/components/site/Seo';
 import { Reveal } from '@/components/site/Reveal';
 import { useCatalog } from '@/features/marketing/hooks';
 import { SiteButton } from '@/features/marketing/components/shared';
@@ -29,6 +30,11 @@ export default function GalleryPage() {
 
   return (
     <>
+      <Seo
+        title="Galeri Ternak"
+        description="Potret kandang dan ternak sapi, kambing, serta domba yang kami rawat di BELS FARM."
+        path="/gallery"
+      />
       <PageHero
         eyebrow="Galeri"
         title="Potret kandang & ternak kami"
