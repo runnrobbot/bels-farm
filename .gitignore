@@ -37,7 +37,9 @@ npm-debug.log*
 
 # Supabase — kept private (public repo). Keep a LOCAL backup of supabase/migrations;
 # that folder is how the DB schema is reproduced. Vercel deploy doesn't need it.
-supabase
+# NOTE: leading slash anchors this to the ROOT folder only, so it does NOT also
+# ignore src/lib/supabase (the app's Supabase client).
+/supabase/
 
 # TS build info
 *.tsbuildinfo
