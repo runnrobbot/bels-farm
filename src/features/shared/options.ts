@@ -68,22 +68,6 @@ export function useEmployeeOptions() {
   });
 }
 
-export function useCustomerOptions() {
-  return useQuery({
-    queryKey: ['options', 'customers'],
-    queryFn: async (): Promise<Option[]> => {
-      const { data, error } = await supabase
-        .from('customers')
-        .select('id, full_name')
-        .is('deleted_at', null)
-        .order('full_name');
-      if (error) throw toAppError(error);
-      return (data ?? []).map((c) => ({ value: c.id, label: c.full_name }));
-    },
-    staleTime: FIVE_MIN,
-  });
-}
-
 /** Build a quick id→label lookup from an options array (for table cells). */
 export function optionMap(options: Option[]): Map<string, string> {
   return new Map(options.map((o) => [o.value, o.label]));

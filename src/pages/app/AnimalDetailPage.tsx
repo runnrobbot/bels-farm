@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Scale, Plus, Cake, Palette, MapPin, Dna, Printer } from 'lucide-react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Scale, Plus, Cake, Palette, MapPin, Dna, Printer, Pencil, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -8,30 +8,40 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
+import { ConfirmDialog } from '@/components/feedback/ConfirmDialog';
 import { Skeleton, SkeletonText } from '@/components/ui/Skeleton';
 import { ActivityTimeline } from '@/components/data/ActivityTimeline';
 import { WeightChart } from '@/features/livestock/components/WeightChart';
+import { AnimalForm } from '@/features/livestock/components/AnimalForm';
 import { QrCode } from '@/components/ui/QrCode';
 import { printAnimalLabel } from '@/features/livestock/printLabel';
 import { useAnimal, useAnimalTimeline, useAnimalWeights } from '@/features/livestock/hooks/useAnimals';
-import { useAddWeight } from '@/features/livestock/hooks/useAnimalMutations';
+import { useAddWeight, useUpdateAnimal, useDeleteAnimal } from '@/features/livestock/hooks/useAnimalMutations';
+import type { AnimalFormValues } from '@/features/livestock/schema';
 import { SPECIES_LABEL, SPECIES_TONE, STATUS_LABEL, STATUS_TONE } from '@/features/livestock/labels';
 import { usePermission } from '@/features/auth/hooks/usePermission';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { paths } from '@/app/routes/paths';
+import { emptyToNull } from '@/lib/utils';
+import type { UpdateDto } from '@/types/database';
 import { format } from 'date-fns';
 
 export default function AnimalDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { can } = usePermission();
   const { profile } = useAuth();
   const { data: animal, isLoading } = useAnimal(id);
   const { data: weights = [] } = useAnimalWeights(id);
   const { data: timeline = [] } = useAnimalTimeline(id);
   const addWeight = useAddWeight();
+  const updateAnimal = useUpdateAnimal();
+  const deleteAnimal = useDeleteAnimal();
 
   const [weightOpen, setWeightOpen] = useState(false);
   const [weightValue, setWeightValue] = useState('');
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -75,6 +85,20 @@ export default function AnimalDetailPage() {
     );
   };
 
+  const handleEdit = (values: AnimalFormValues) => {
+    if (!id) return;
+    const patch = emptyToNull({
+      ...values,
+      public_image_url: values.gallery_urls?.[0] ?? null,
+    }) as UpdateDto<'animals'>;
+    updateAnimal.mutate({ id, patch }, { onSuccess: () => setEditOpen(false) });
+  };
+
+  const handleDelete = () => {
+    if (!id) return;
+    deleteAnimal.mutate(id, { onSuccess: () => navigate(paths.livestock) });
+  };
+
   const details = [
     { icon: Dna, label: 'Breed', value: animal.breed?.name ?? '—' },
     { icon: Cake, label: 'Birth date', value: animal.birth_date ? format(new Date(animal.birth_date), 'd MMM yyyy') : '—' },
@@ -96,11 +120,23 @@ export default function AnimalDetailPage() {
         title={animal.name || 'Unnamed animal'}
         description={`Ear tag ${animal.ear_tag}`}
         actions={
-          can('livestock', 'update') && (
-            <Button variant="outline" onClick={() => setWeightOpen(true)}>
-              <Plus className="size-4" /> Record weight
-            </Button>
-          )
+          <div className="flex flex-wrap items-center gap-2">
+            {can('livestock', 'update') && (
+              <Button variant="outline" onClick={() => setWeightOpen(true)}>
+                <Plus className="size-4" /> Record weight
+              </Button>
+            )}
+            {can('livestock', 'update') && (
+              <Button variant="outline" onClick={() => setEditOpen(true)}>
+                <Pencil className="size-4" /> Edit
+              </Button>
+            )}
+            {can('livestock', 'delete') && (
+              <Button variant="ghost" onClick={() => setDeleteOpen(true)} aria-label="Arsipkan hewan">
+                <Trash2 className="size-4 text-danger" />
+              </Button>
+            )}
+          </div>
         }
       />
 
@@ -191,6 +227,48 @@ export default function AnimalDetailPage() {
           This updates the animal's current weight and adds an entry to its growth chart and timeline.
         </p>
       </Modal>
+
+      <Modal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        title="Edit animal"
+        description={`Perbarui data ${animal.ear_tag}.`}
+        size="xl"
+      >
+        <AnimalForm
+          submitting={updateAnimal.isPending}
+          onSubmit={handleEdit}
+          onCancel={() => setEditOpen(false)}
+          defaultValues={{
+            ear_tag: animal.ear_tag,
+            name: animal.name ?? '',
+            species: animal.species,
+            sex: animal.sex,
+            breed_id: animal.breed_id ?? null,
+            color: animal.color ?? '',
+            birth_date: animal.birth_date ?? '',
+            acquisition: animal.acquisition,
+            status: animal.status,
+            current_weight_kg: animal.current_weight_kg ?? null,
+            notes: animal.notes ?? '',
+            is_listed: animal.is_listed ?? false,
+            listing_title: animal.listing_title ?? '',
+            listing_price: animal.listing_price ?? null,
+            listing_description: animal.listing_description ?? '',
+            gallery_urls: animal.gallery_urls ?? [],
+          }}
+        />
+      </Modal>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title="Arsipkan hewan ini?"
+        description={`${animal.name || animal.ear_tag} akan diarsipkan (soft delete). Riwayat tetap tersimpan dan bisa dipulihkan kembali.`}
+        confirmLabel="Arsipkan"
+        loading={deleteAnimal.isPending}
+        onConfirm={handleDelete}
+        onClose={() => setDeleteOpen(false)}
+      />
     </div>
   );
 }

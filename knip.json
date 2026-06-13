@@ -1,0 +1,4 @@
+{
+  "entry": ["api/**/*.ts"],
+  "ignore": ["src/types/barcode-detector.d.ts"]
+}

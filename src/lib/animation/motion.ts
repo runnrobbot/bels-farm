@@ -98,17 +98,4 @@ export function expandHeight(el: HTMLElement, expanded: boolean) {
   });
 }
 
-/** Continuous gentle floating loop (e.g. hero accents). No-op if reduced motion. */
-export function float(targets: Target, distance = 12, duration = 2800) {
-  if (prefersReducedMotion()) return;
-  return anime({
-    targets,
-    translateY: [0, -distance],
-    direction: 'alternate',
-    loop: true,
-    easing: 'easeInOutSine',
-    duration,
-  });
-}
-
 export { anime };

@@ -66,7 +66,7 @@ export function SiteHeader() {
             to={paths.login}
             className="hidden items-center gap-1.5 rounded-full bg-site-moss px-5 py-2.5 text-sm font-medium text-site-paper transition-colors hover:bg-site-moss-dark sm:inline-flex"
           >
-            Masuk Dasbor <ArrowUpRight className="size-4" />
+            Masuk <ArrowUpRight className="size-4" />
           </Link>
           <button
             onClick={() => setOpen((v) => !v)}
@@ -102,7 +102,7 @@ export function SiteHeader() {
               to={paths.login}
               className="mt-2 inline-flex items-center justify-center gap-1.5 rounded-full bg-site-moss px-5 py-3 text-sm font-medium text-site-paper"
             >
-              Masuk Dasbor <ArrowUpRight className="size-4" />
+              Masuk <ArrowUpRight className="size-4" />
             </Link>
           </nav>
         </div>

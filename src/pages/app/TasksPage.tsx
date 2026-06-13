@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { ListChecks } from 'lucide-react';
 import { z } from 'zod';
 import { CrudListPage } from '@/components/data/CrudListPage';
@@ -8,8 +7,7 @@ import type { FieldDef } from '@/components/data/CrudFormModal';
 import { Badge } from '@/components/ui/Badge';
 import { createResource } from '@/lib/crud/resource';
 import { createResourceHooks } from '@/lib/crud/useResource';
-import { supabase } from '@/lib/supabase/client';
-import { toAppError } from '@/lib/errors';
+import { useEmployeeOptions } from '@/features/shared/options';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { emptyToNull } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -96,19 +94,7 @@ const columns: Column<TaskRow>[] = [
 
 export default function TasksPage() {
   const { profile } = useAuth();
-  const { data: employees = [] } = useQuery({
-    queryKey: ['employee-options'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('employees')
-        .select('id, full_name')
-        .is('deleted_at', null)
-        .order('full_name');
-      if (error) throw toAppError(error);
-      return (data ?? []).map((e) => ({ value: e.id, label: e.full_name }));
-    },
-    staleTime: 5 * 60_000,
-  });
+  const { data: employees = [] } = useEmployeeOptions();
 
   const fields: FieldDef[] = useMemo(
     () => [
