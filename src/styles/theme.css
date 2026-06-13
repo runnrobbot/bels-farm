@@ -1,0 +1,41 @@
+/**
+ * BELS FARM theme tokens — one unified palette shared by the dashboard, auth
+ * pages, and (via the matching `site-*` colors in tailwind.config) the public
+ * site. Warm paper background, deep "moss" green primary, and a "clay" accent —
+ * the same hues used across the marketing site so the whole product feels like
+ * one brand. Edit values here to retune globally.
+ */
+
+:root {
+  --radius: 0.75rem;
+
+  /* Warm paper surfaces (match the public site's cream). */
+  --background: 44 30% 96%;
+  --foreground: 150 16% 14%;
+
+  --surface: 0 0% 100%;
+  --surface-raised: 0 0% 100%;
+  --surface-sunken: 44 24% 94%;
+
+  --muted: 44 20% 92%;
+  --muted-foreground: 150 8% 40%;
+
+  /* Moss green primary (same family as site `moss` #33502F). */
+  --primary: 113 28% 26%;
+  --primary-foreground: 0 0% 100%;
+  --primary-muted: 113 28% 91%;
+
+  /* Clay accent (same as site `clay` #B85733). */
+  --accent: 16 56% 46%;
+  --accent-foreground: 0 0% 100%;
+
+  --success: 145 55% 34%;
+  --warning: 32 80% 46%;
+  --danger: 0 70% 47%;
+  --info: 200 65% 40%;
+
+  --border: 44 18% 87%;
+  --input: 44 18% 86%;
+  --ring: 113 28% 34%;
+  --shadow: 150 30% 20%;
+}
