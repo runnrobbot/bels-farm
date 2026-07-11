@@ -44,6 +44,7 @@ const CalendarPage = lazy(() => import('@/pages/app/CalendarPage'));
 const ReportsPage = lazy(() => import('@/pages/app/ReportsPage'));
 const AuditPage = lazy(() => import('@/pages/app/AuditPage'));
 const ScanPage = lazy(() => import('@/pages/app/ScanPage'));
+const PurchasesPage = lazy(() => import('@/pages/app/PurchasesPage'));
 
 export const router = createBrowserRouter([
   // Public marketing site (shared layout, own warm palette).
@@ -127,6 +128,7 @@ export const router = createBrowserRouter([
   guarded(paths.cms, 'cms', <CmsPage />),
   guarded(paths.settings, 'settings', <SettingsPage />),
   guarded(paths.qurban, 'qurban', <QurbanAdminPage />),
+  guarded(paths.purchases, 'livestock', <PurchasesPage />),
   guarded(paths.calendar, 'calendar', <CalendarPage />),
   guarded(paths.reports, 'report', <ReportsPage />),
   guarded(paths.audit, 'audit', <AuditPage />),

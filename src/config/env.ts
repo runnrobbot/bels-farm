@@ -15,8 +15,6 @@ const envSchema = z.object({
     .regex(/^\d{8,15}$/, 'VITE_WHATSAPP_NUMBER must be digits only (international format)')
     .optional(),
   VITE_SITE_URL: z.string().url().optional(),
-  VITE_MIDTRANS_CLIENT_KEY: z.string().optional(),
-  VITE_MIDTRANS_IS_PRODUCTION: z.enum(['true', 'false']).optional(),
 });
 
 const parsed = envSchema.safeParse(import.meta.env);
@@ -34,9 +32,6 @@ export const env = {
   supabaseAnonKey: parsed.data.VITE_SUPABASE_ANON_KEY,
   whatsappNumber: parsed.data.VITE_WHATSAPP_NUMBER ?? '',
   siteUrl: parsed.data.VITE_SITE_URL ?? window.location.origin,
-  midtransClientKey: parsed.data.VITE_MIDTRANS_CLIENT_KEY ?? '',
-  midtransProduction: parsed.data.VITE_MIDTRANS_IS_PRODUCTION === 'true',
-  midtransEnabled: Boolean(parsed.data.VITE_MIDTRANS_CLIENT_KEY),
   isDev: import.meta.env.DEV,
   isProd: import.meta.env.PROD,
 } as const;

@@ -39,6 +39,7 @@ export const paths = {
   employees: '/app/employees',
   finance: '/app/finance',
   qurban: '/app/qurban',
+  purchases: '/app/purchases',
   tasks: '/app/tasks',
   calendar: '/app/calendar',
   reports: '/app/reports',

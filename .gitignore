@@ -46,3 +46,7 @@ npm-debug.log*
 
 # Lockfile — intentionally excluded by project owner
 package-lock.json
+
+.gitignore
+.claude
+.vscode

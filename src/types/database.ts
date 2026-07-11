@@ -352,6 +352,21 @@ export type CustomerTransactionRow = Created & {
   deleted_at: string | null;
 }
 
+/** Tracks animal purchase requests submitted via website (pending / confirmed / rejected). */
+export type AnimalSaleRow = Timestamps & {
+  id: string;
+  animal_id: string;
+  customer_id: string;
+  amount: number;
+  status: PaymentStatus;
+  proof_path: string | null;
+  notes: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  rejected_at: string | null;
+  rejected_reason: string | null;
+}
+
 export type EmployeeRow = Timestamps & {
   id: string;
   organization_id: string;
@@ -626,6 +641,7 @@ export type Database = {
       stock_movements: Table<StockMovementRow>;
       customers: Table<CustomerRow>;
       customer_transactions: Table<CustomerTransactionRow>;
+      animal_sales: Table<AnimalSaleRow>;
       employees: Table<EmployeeRow>;
       attendance_records: Table<AttendanceRecordRow>;
       finance_categories: Table<FinanceCategoryRow>;
@@ -673,6 +689,11 @@ export type Database = {
       qurban_pending_payments: { Args: Record<string, never>; Returns: Json };
       qurban_confirm_payment: { Args: { p_id: string; p_approve: boolean }; Returns: undefined };
       qurban_enrollment_summary: { Args: Record<string, never>; Returns: Json };
+      animal_sale_submit: {
+        Args: { p_animal_id: string; p_amount: number; p_customer_id: string; p_proof: string; p_notes: string | null };
+        Returns: string;
+      };
+      animal_sale_decide: { Args: { p_id: string; p_approve: boolean }; Returns: undefined };
     };
     Enums: {
       species: Species;

@@ -11,6 +11,7 @@ import {
   Contact,
   Wallet,
   PiggyBank,
+  ShoppingCart,
   MessagesSquare,
   ListChecks,
   CalendarDays,
@@ -67,6 +68,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'chat', to: paths.chat, icon: MessagesSquare, resource: 'chat' },
       { label: 'finance', to: paths.finance, icon: Wallet, resource: 'finance' },
       { label: 'qurban', to: paths.qurban, icon: PiggyBank, resource: 'qurban' },
+      { label: 'purchases', to: paths.purchases, icon: ShoppingCart, resource: 'livestock' },
     ],
   },
   {

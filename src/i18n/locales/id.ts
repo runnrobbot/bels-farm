@@ -31,6 +31,7 @@ export const id: typeof en = {
     employees: 'Karyawan',
     finance: 'Keuangan',
     qurban: 'Tabungan Qurban',
+    purchases: 'Pembelian Hewan',
     tasks: 'Tugas',
     calendar: 'Kalender',
     reports: 'Laporan',

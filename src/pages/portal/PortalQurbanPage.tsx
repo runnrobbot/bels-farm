@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { PiggyBank, Plus, CheckCircle2, Clock, Loader2 } from 'lucide-react';
+import { PiggyBank, Plus, CheckCircle2, Clock, Upload, Loader2 } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
@@ -16,13 +16,12 @@ import {
 } from '@/features/portal/service';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { useQueryClient } from '@tanstack/react-query';
-import { payWithMidtrans } from '@/lib/midtrans';
-import { printReceipt } from '@/features/portal/printReceipt';
-import { env } from '@/config/env';
 import { toast } from '@/stores/toastStore';
 import { formatCurrency } from '@/lib/utils';
 import { SPECIES_ID } from '@/features/marketing/species';
 import { format } from 'date-fns';
+
+const BCA_ACCOUNT = 'BCA 7615311201\nAN MUHAMAD LABIB AZHAR';
 
 export default function PortalQurbanPage() {
   const { profile, session } = useAuth();
@@ -34,9 +33,6 @@ export default function PortalQurbanPage() {
 
   const [payFor, setPayFor] = useState<PortalEnrollment | null>(null);
 
-  // Make sure a customer record exists for this account (once). The WhatsApp
-  // number may live in auth metadata when the account was created with email
-  // confirmation enabled (the customer row isn't created until first sign-in).
   useEffect(() => {
     if (ensured.current || !profile) return;
     ensured.current = true;
@@ -175,27 +171,7 @@ function EnrollmentCard({
                 )}
                 {format(new Date(p.paid_at), 'd MMM yyyy')}
               </span>
-              <span className="flex items-center gap-2">
-                <span className="font-medium">{formatCurrency(p.amount)}</span>
-                {p.status === 'confirmed' && (
-                  <button
-                    onClick={() =>
-                      printReceipt({
-                        receiptNo: p.id.slice(0, 8).toUpperCase(),
-                        paidAt: p.paid_at,
-                        customerName,
-                        planName: enrollment.plan.name,
-                        amount: Number(p.amount),
-                        method: p.method,
-                      })
-                    }
-                    className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs text-site-moss-dark hover:bg-site-moss-soft"
-                    aria-label="Cetak kuitansi"
-                  >
-                    Kuitansi
-                  </button>
-                )}
-              </span>
+              <span className="font-medium">{formatCurrency(p.amount)}</span>
             </li>
           ))}
         </ul>
@@ -215,52 +191,48 @@ function EnrollmentCard({
 
 function PaymentModal({ enrollment, onClose }: { enrollment: PortalEnrollment; onClose: () => void }) {
   const submit = useSubmitPayment();
-  const qc = useQueryClient();
   const [amount, setAmount] = useState(enrollment.plan.installment_amount?.toString() ?? '');
-  const [method, setMethod] = useState('Transfer Bank');
-  const [paying, setPaying] = useState(false);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofPreview, setProofPreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const remaining = Math.max(0, Number(enrollment.plan.target_amount) - Number(enrollment.paid_confirmed));
 
-  const numericAmount = () => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setProofFile(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setProofPreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setProofPreview(null);
+    }
+  };
+
+  const handleSubmit = () => {
     const value = Number(amount);
     if (!value || value <= 0) {
       toast.error('Nominal tidak valid');
-      return null;
+      return;
     }
-    return value;
-  };
-
-  const handleManual = () => {
-    const value = numericAmount();
-    if (value == null) return;
+    if (!proofFile) {
+      toast.error('Wajib upload bukti transfer');
+      return;
+    }
+    setUploading(true);
     submit.mutate(
-      { enrollmentId: enrollment.id, amount: value, method, proof: '' },
-      { onSuccess: onClose },
+      { enrollmentId: enrollment.id, amount: value, method: 'Transfer Bank BCA', proofFile },
+      {
+        onSuccess: () => {
+          setProofPreview(null);
+          setProofFile(null);
+          onClose();
+        },
+        onError: () => setUploading(false),
+      },
     );
-  };
-
-  const handleMidtrans = async () => {
-    const value = numericAmount();
-    if (value == null) return;
-    setPaying(true);
-    try {
-      const outcome = await payWithMidtrans({ enrollmentId: enrollment.id, amount: value });
-      await qc.invalidateQueries({ queryKey: ['portal', 'qurban'] });
-      if (outcome === 'success') {
-        toast.success('Terima kasih!', 'Pembayaran berhasil. Semoga qurban Anda berkah dan diterima.');
-        onClose();
-      } else if (outcome === 'pending') {
-        toast.info('Menunggu pembayaran', 'Selesaikan sesuai instruksi. Status akan diperbarui otomatis.');
-        onClose();
-      } else if (outcome === 'error') {
-        toast.error('Pembayaran gagal', 'Silakan coba lagi.');
-      }
-    } catch (error) {
-      toast.fromError(error, 'Gagal memproses pembayaran');
-    } finally {
-      setPaying(false);
-    }
   };
 
   return (
@@ -276,11 +248,12 @@ function PaymentModal({ enrollment, onClose }: { enrollment: PortalEnrollment; o
             Tutup
           </button>
           <button
-            onClick={handleManual}
-            disabled={submit.isPending}
-            className="rounded-full border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted disabled:opacity-50"
+            onClick={handleSubmit}
+            disabled={submit.isPending || uploading}
+            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
           >
-            Catat transfer manual
+            {submit.isPending || uploading ? <Loader2 className="size-4 animate-spin" /> : null}
+            Kirim & Konfirmasi
           </button>
         </>
       }
@@ -289,40 +262,36 @@ function PaymentModal({ enrollment, onClose }: { enrollment: PortalEnrollment; o
         <Field label="Nominal (Rp)" required hint={`Sisa target: ${formatCurrency(remaining)}`}>
           <Input type="number" step="10000" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0" />
         </Field>
-        {enrollment.plan.installment_amount != null && (
-          <p className="-mt-1 text-xs text-muted-foreground">
-            Cicilan dianjurkan: <span className="font-medium text-foreground">{formatCurrency(enrollment.plan.installment_amount)}</span> per setoran.
-          </p>
-        )}
 
-        {env.midtransEnabled && (
-          <button
-            onClick={() => void handleMidtrans()}
-            disabled={paying}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
-          >
-            {paying ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
-            Bayar Online (Midtrans)
-          </button>
-        )}
-
-        <div className="rounded-lg border border-border bg-surface-sunken p-3">
-          <p className="mb-2 text-xs font-medium text-muted-foreground">Atau catat transfer manual:</p>
-          <Field label="Metode">
-            <Select
-              value={method}
-              onChange={(e) => setMethod(e.target.value)}
-              options={[
-                { value: 'Transfer Bank', label: 'Transfer Bank' },
-                { value: 'E-wallet', label: 'E-wallet' },
-                { value: 'Tunai', label: 'Tunai' },
-              ]}
-            />
-          </Field>
-          <p className="mt-2 text-2xs text-muted-foreground">
-            Setoran manual akan ditinjau dan dikonfirmasi oleh admin sebelum masuk ke progres tabungan Anda.
-          </p>
+        {/* BCA Account */}
+        <div className="rounded-xl border-2 border-site-moss/40 bg-site-moss-soft/50 p-4">
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-site-moss-dark">Transfer ke rekening</p>
+          <p className="whitespace-pre-line font-mono text-sm font-semibold text-site-ink">{BCA_ACCOUNT}</p>
         </div>
+
+        {/* Proof upload */}
+        <Field label="Bukti Transfer" required>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="flex w-full items-center gap-3 rounded-lg border border-dashed border-site-line bg-site-paper px-4 py-3 text-sm text-site-ink-soft transition-colors hover:border-site-moss hover:text-site-ink"
+          >
+            <Upload className="size-5 text-site-moss" />
+            {proofFile ? proofFile.name : 'Klik untuk upload screenshot bukti transfer'}
+          </button>
+          {proofPreview && (
+            <div className="mt-2 overflow-hidden rounded-lg border border-site-line">
+              <img src={proofPreview} alt="Preview bukti transfer" className="max-h-48 w-full object-contain bg-site-sand" />
+            </div>
+          )}
+        </Field>
+
+        {enrollment.plan.installment_amount != null && (
+          <p className="-mt-1 text-xs text-site-ink-soft">
+            Anjuran cicilan: <span className="font-medium text-site-ink">{formatCurrency(enrollment.plan.installment_amount)}</span>
+          </p>
+        )}
       </div>
     </Modal>
   );

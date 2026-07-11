@@ -27,6 +27,7 @@ export const en = {
     employees: 'Employees',
     finance: 'Finance',
     qurban: 'Qurban Savings',
+    purchases: 'Animal Purchases',
     tasks: 'Tasks',
     calendar: 'Calendar',
     reports: 'Reports',
