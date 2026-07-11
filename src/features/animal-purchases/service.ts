@@ -27,7 +27,42 @@ export interface AnimalSaleRow {
 
 // --- Helpers ---
 
+/** Convert File to base64 string for serverless upload. */
+async function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file); // includes mime type prefix
+  });
+}
+
+/**
+ * Upload proof via the serverless endpoint (uses service role key, bypasses storage RLS).
+ * Falls back to direct Supabase upload for local dev.
+ */
 async function uploadAnimalPurchaseProof(file: File): Promise<string> {
+  const base64 = await fileToBase64(file);
+  const mimeType = file.type || 'image/webp';
+  const filename = file.name || 'proof.webp';
+
+  // Try serverless endpoint first (works on Vercel)
+  try {
+    const res = await fetch('/api/upload-proof', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename, mimeType, base64 }),
+    });
+    if (res.ok) {
+      const { path } = await res.json();
+      return path;
+    }
+    // If endpoint not deployed or error, fall through to direct upload
+  } catch {
+    // network error — fall through
+  }
+
+  // Fallback: direct upload (works for authenticated users with storage RLS)
   const blob = await compressToWebp(file, 1280, 0.85);
   const path = `animal-purchases/${crypto.randomUUID()}.webp`;
   const { error } = await supabase.storage.from('qurban-proofs').upload(path, blob, {
