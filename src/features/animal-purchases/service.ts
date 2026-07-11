@@ -102,23 +102,33 @@ export function useApproveAnimalPurchase() {
   });
 }
 
+export interface BuyerInfo {
+  name: string;
+  phone: string;
+  address: string;
+  namaPengurban: string;
+}
+
 export function useSubmitAnimalPurchase() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: {
       animalId: string;
       amount: number;
-      customerId: string;
+      customerId?: string;
       proofFile: File;
-      notes?: string;
+      buyer?: BuyerInfo;
     }) => {
       const proofPath = await uploadAnimalPurchaseProof(input.proofFile);
+      const notes = input.buyer
+        ? `Pembeli: ${input.buyer.name}\nHP: ${input.buyer.phone}\nAlamat: ${input.buyer.address}\nNama Pengurban: ${input.buyer.namaPengurban}`
+        : null;
       const { error } = await supabase.rpc('animal_sale_submit', {
         p_animal_id: input.animalId,
         p_amount: input.amount,
-        p_customer_id: input.customerId,
+        p_customer_id: input.customerId ?? '',
         p_proof: proofPath,
-        p_notes: input.notes ?? null,
+        p_notes: notes,
       });
       if (error) throw toAppError(error);
     },

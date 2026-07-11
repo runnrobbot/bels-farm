@@ -18,6 +18,9 @@ import { toast } from '@/stores/toastStore';
 
 const BCA_ACCOUNT = 'BCA 7615311201\nAN MUHAMAD LABIB AZHAR';
 
+// Anti-spam: honeypot field — bots fill this, humans don't see it.
+const HONEYPOT_DELAY_MS = 3000;
+
 export default function ListingDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { data: animal, isLoading } = useListing(id);
@@ -187,10 +190,18 @@ export default function ListingDetailPage() {
 function PurchaseModal({ animal, onClose }: { animal: NonNullable<ReturnType<typeof useListing>['data']>; onClose: () => void }) {
   const submit = useSubmitAnimalPurchase();
   const [amount, setAmount] = useState(animal.listing_price?.toString() ?? '');
+  const [buyerName, setBuyerName] = useState('');
+  const [buyerPhone, setBuyerPhone] = useState('');
+  const [buyerAddress, setBuyerAddress] = useState('');
+  const [namaPengurban, setNamaPengurban] = useState('');
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [proofPreview, setProofPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const honeypotRef = useRef<HTMLInputElement>(null);
+
+  // Anti-spam: record when form renders. If submitted in <3s, likely a bot.
+  const formLoadedAt = useRef(Date.now());
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -204,43 +215,40 @@ function PurchaseModal({ animal, onClose }: { animal: NonNullable<ReturnType<typ
     }
   };
 
+  const validate = () => {
+    if (!buyerName.trim()) { toast.error('Nama lengkap wajib diisi'); return false; }
+    if (!buyerPhone.trim()) { toast.error('No. HP wajib diisi'); return false; }
+    if (!/^\d{8,15}$/.test(buyerPhone.replace(/\s|-|\(|\)/g, ''))) { toast.error('No. HP tidak valid'); return false; }
+    if (!buyerAddress.trim()) { toast.error('Alamat lengkap wajib diisi'); return false; }
+    if (!namaPengurban.trim()) { toast.error('Nama pengurban wajib diisi'); return false; }
+    if (!amount || Number(amount) <= 0) { toast.error('Nominal tidak valid'); return false; }
+    if (!proofFile) { toast.error('Wajib upload bukti transfer'); return false; }
+    return true;
+  };
+
   const handleSubmit = async () => {
-    const value = Number(amount);
-    if (!value || value <= 0) {
-      toast.error('Nominal tidak valid');
+    // Anti-spam: honeypot — if filled, silently reject
+    if (honeypotRef.current?.value) return;
+    // Anti-spam: fill-time — reject if form filled in <3s
+    if (Date.now() - formLoadedAt.current < HONEYPOT_DELAY_MS) {
+      toast.error('Terlalu cepat. Silakan isi formulir dengan wajar.');
       return;
     }
-    if (!proofFile) {
-      toast.error('Wajib upload bukti transfer');
-      return;
-    }
+    if (!validate()) return;
+
     setUploading(true);
     try {
-      // Get current user customer ID (assumes ensureMyCustomer was called on login)
-      const { data: sessionData } = await import('@/lib/supabase/client').then(m => m.supabase.auth.getSession());
-      const uid = sessionData.session?.user.id;
-      if (!uid) {
-        toast.error('Silakan login terlebih dahulu');
-        setUploading(false);
-        return;
-      }
-      // Look up customer record for this user
-      const { data: customer } = await import('@/lib/supabase/client').then(m =>
-        m.supabase.from('customers').select('id').eq('profile_id', uid).maybeSingle()
-      );
-      if (!customer) {
-        toast.error('Data pelanggan tidak ditemukan. Hubungi admin.');
-        setUploading(false);
-        return;
-      }
       await submit.mutateAsync({
         animalId: animal.id,
-        amount: value,
-        customerId: customer.id,
-        proofFile,
+        amount: Number(amount),
+        proofFile: proofFile!, // validated above
+        buyer: {
+          name: buyerName.trim(),
+          phone: buyerPhone.trim(),
+          address: buyerAddress.trim(),
+          namaPengurban: namaPengurban.trim(),
+        },
       });
-      setProofPreview(null);
-      setProofFile(null);
       onClose();
     } catch {
       setUploading(false);
@@ -277,6 +285,39 @@ function PurchaseModal({ animal, onClose }: { animal: NonNullable<ReturnType<typ
           <p className="whitespace-pre-line font-mono text-sm font-semibold text-site-ink">{BCA_ACCOUNT}</p>
         </div>
 
+        {/* Buyer info */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="Nama Lengkap" required className="sm:col-span-2">
+            <Input
+              value={buyerName}
+              onChange={(e) => setBuyerName(e.target.value)}
+              placeholder="Nama sesuai KTP"
+            />
+          </Field>
+          <Field label="No. HP / WhatsApp" required>
+            <Input
+              value={buyerPhone}
+              onChange={(e) => setBuyerPhone(e.target.value)}
+              placeholder="08xxxxxxxxxx"
+              type="tel"
+            />
+          </Field>
+          <Field label="Nama Pengurban" required>
+            <Input
+              value={namaPengurban}
+              onChange={(e) => setNamaPengurban(e.target.value)}
+              placeholder="Nama orang yg akan qurban"
+            />
+          </Field>
+          <Field label="Alamat Lengkap" required className="sm:col-span-2">
+            <Input
+              value={buyerAddress}
+              onChange={(e) => setBuyerAddress(e.target.value)}
+              placeholder="Desa/Kecamatan/Kabupaten"
+            />
+          </Field>
+        </div>
+
         {/* Amount */}
         <Field label="Nominal (Rp)" required>
           <Input
@@ -311,8 +352,18 @@ function PurchaseModal({ animal, onClose }: { animal: NonNullable<ReturnType<typ
           )}
         </Field>
 
+        {/* Honeypot — invisible, bots fill it */}
+        <input
+          ref={honeypotRef}
+          name="website"
+          tabIndex={-1}
+          autoComplete="off"
+          className="absolute -z-10 h-px w-px overflow-hidden opacity-0"
+          aria-hidden="true"
+        />
+
         <p className="text-xs text-site-ink-soft">
-          Permintaan akan ditinjau oleh admin. Anda akan dikontak setelah pembayaran dikonfirmasi.
+          Permintaan akan ditinjau admin. Anda akan dihubungi setelah pembayaran dikonfirmasi.
         </p>
       </div>
     </Modal>
