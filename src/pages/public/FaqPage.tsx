@@ -4,7 +4,7 @@ import { PageHero } from '@/components/site/PageHero';
 import { Seo } from '@/components/site/Seo';
 import { SiteButton } from '@/features/marketing/components/shared';
 import { waMessage, WA_PRESETS } from '@/features/marketing/site';
-import { expandHeight } from '@/lib/animation/motion';
+import { prefersReducedMotion } from '@/lib/animation/motion';
 import { cn } from '@/lib/utils';
 
 const FAQS = [
@@ -41,7 +41,13 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   const toggle = () => {
     const next = !open;
     setOpen(next);
-    if (bodyRef.current) expandHeight(bodyRef.current, next);
+    if (bodyRef.current && !prefersReducedMotion()) {
+      const el = bodyRef.current;
+      const target = next ? el.scrollHeight : 0;
+      el.style.height = `${target}px`;
+      el.style.opacity = next ? '1' : '0';
+      if (next) el.style.height = 'auto';
+    }
   };
 
   return (

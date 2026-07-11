@@ -12,12 +12,12 @@ import { createResource } from '@/lib/crud/resource';
 import { createResourceHooks } from '@/lib/crud/useResource';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { emptyToNull, formatCurrency, cn } from '@/lib/utils';
-import type { QurbanPlanRow, Species } from '@/types/database';
+import type { QurbanPlanRow } from '@/types/database';
 
 const resource = createResource('qurban_plans', { searchColumns: ['name', 'period_label'] });
 const hooks = createResourceHooks(resource, { label: 'Paket qurban' });
 
-const SPECIES: { value: Species; label: string }[] = [
+const SPECIES = [
   { value: 'cattle', label: 'Sapi' },
   { value: 'goat', label: 'Kambing' },
   { value: 'sheep', label: 'Domba' },

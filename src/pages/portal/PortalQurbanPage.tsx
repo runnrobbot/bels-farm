@@ -3,7 +3,6 @@ import { PiggyBank, Plus, CheckCircle2, Clock, Upload, Loader2 } from 'lucide-re
 import { Modal } from '@/components/ui/Modal';
 import { Field } from '@/components/ui/Field';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { usePublicQurbanPlans } from '@/features/marketing/hooks';
@@ -67,7 +66,6 @@ export default function PortalQurbanPage() {
               <EnrollmentCard
                 key={e.id}
                 enrollment={e}
-                customerName={overview.customer?.full_name ?? profile?.full_name ?? 'Pelanggan'}
                 onPay={() => setPayFor(e)}
               />
             ))}
@@ -120,11 +118,9 @@ export default function PortalQurbanPage() {
 
 function EnrollmentCard({
   enrollment,
-  customerName,
   onPay,
 }: {
   enrollment: PortalEnrollment;
-  customerName: string;
   onPay: () => void;
 }) {
   const target = Number(enrollment.plan.target_amount);

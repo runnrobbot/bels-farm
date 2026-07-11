@@ -1,18 +1,36 @@
 import { useTranslation } from 'react-i18next';
+import { useEffect, useRef } from 'react';
 import { Beef, Wallet, TrendingDown, TrendingUp, Users, Boxes, ListChecks } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { StatCard } from '@/features/dashboard/components/StatCard';
 import { useDashboardStats } from '@/features/dashboard/hooks/useDashboardStats';
-import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { Card, CardTitle } from '@/components/ui/Card';
+import { staggerIn } from '@/lib/animation/motion';
 
 export default function DashboardPage() {
   const { t } = useTranslation();
   const { profile } = useAuth();
   const { data, isLoading, isError } = useDashboardStats();
-  const gridRef = useScrollReveal<HTMLDivElement>();
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // Inline scroll reveal: stagger cards in when they enter the viewport.
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          staggerIn(el.children);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [data]);
 
   const greeting = profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : '';
 

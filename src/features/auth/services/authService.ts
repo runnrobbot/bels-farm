@@ -67,11 +67,6 @@ export const authService = {
     };
   },
 
-  async touchLastSeen() {
-    // Fire-and-forget presence ping; failures are non-critical.
-    await supabase.rpc('touch_last_seen').then(undefined, () => undefined);
-  },
-
   async updateOwnProfile(userId: string, patch: Partial<ProfileRow>) {
     return unwrap(
       await supabase.from('profiles').update(patch).eq('id', userId).select('*').single(),

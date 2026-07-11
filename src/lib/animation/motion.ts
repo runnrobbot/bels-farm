@@ -78,24 +78,4 @@ export function countTo(
   });
 }
 
-/** Expand/collapse height transition (e.g. accordions, sidebar groups). */
-export function expandHeight(el: HTMLElement, expanded: boolean) {
-  if (prefersReducedMotion()) {
-    el.style.height = expanded ? 'auto' : '0px';
-    el.style.opacity = expanded ? '1' : '0';
-    return;
-  }
-  const target = expanded ? el.scrollHeight : 0;
-  return anime({
-    targets: el,
-    height: target,
-    opacity: expanded ? [0, 1] : [1, 0],
-    duration: DURATION.base,
-    easing: EASING.spring,
-    complete: () => {
-      if (expanded) el.style.height = 'auto';
-    },
-  });
-}
-
 export { anime };

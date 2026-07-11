@@ -9,7 +9,6 @@ import { SectionHeading, SiteButton, Pill } from '@/features/marketing/component
 import { Reveal } from '@/components/site/Reveal';
 import { Seo } from '@/components/site/Seo';
 import { useCountUp } from '@/hooks/useCountUp';
-import { useParallax } from '@/hooks/useParallax';
 import { anime, prefersReducedMotion } from '@/lib/animation/motion';
 import { format } from 'date-fns';
 
@@ -38,7 +37,23 @@ export default function HomePage() {
   const { data: testimonials = [] } = useTestimonials();
   const { data: articles = [] } = useArticles();
   const heroRef = useRef<HTMLDivElement>(null);
-  const blobRef = useParallax<HTMLDivElement>(-0.18);
+  const blobRef = useRef<HTMLDivElement>(null);
+
+  // Inline parallax: drifts the hero blob up as the page scrolls.
+  useEffect(() => {
+    if (!blobRef.current || prefersReducedMotion()) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const rect = blobRef.current!.getBoundingClientRect();
+      const offset = rect.top + rect.height / 2 - window.innerHeight / 2;
+      blobRef.current!.style.transform = `translate3d(0, ${(offset * -0.18).toFixed(1)}px, 0)`;
+    };
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { window.removeEventListener('scroll', onScroll); if (frame) cancelAnimationFrame(frame); };
+  }, []);
 
   useEffect(() => {
     const el = heroRef.current;

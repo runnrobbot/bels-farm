@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { toAppError } from '@/lib/errors';
+import { compressToWebp } from '@/lib/compress';
 import { toast } from '@/stores/toastStore';
 import type { PaymentStatus, Species } from '@/types/database';
 
@@ -25,27 +26,6 @@ export interface AnimalSaleRow {
 }
 
 // --- Helpers ---
-
-async function compressToWebp(file: File, maxDim: number, quality: number): Promise<Blob> {
-  if (!file.type.startsWith('image/')) return file;
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
-    const w = Math.round(bitmap.width * scale);
-    const h = Math.round(bitmap.height * scale);
-    const canvas = document.createElement('canvas');
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return file;
-    ctx.drawImage(bitmap, 0, 0, w, h);
-    bitmap.close();
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', quality));
-    return blob ?? file;
-  } catch {
-    return file;
-  }
-}
 
 async function uploadAnimalPurchaseProof(file: File): Promise<string> {
   const blob = await compressToWebp(file, 1280, 0.85);

@@ -1,4 +1,3 @@
-import { ShoppingCart } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { AdminPurchases } from '@/features/animal-purchases/AdminPurchases';
 

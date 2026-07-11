@@ -96,7 +96,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 icon={<Mail className="size-4" />}
                 invalid={!!errors.email}
-                placeholder="you@belsfarm.com"
+                placeholder="email@belsfarm.com"
                 {...register('email')}
               />
               {errors.email && <p className="mt-1 text-xs text-danger">{errors.email.message}</p>}

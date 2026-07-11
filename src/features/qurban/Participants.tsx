@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
+import { SPECIES_ID } from '@/features/marketing/species';
 import type { Species } from '@/types/database';
 
 interface Participant {
@@ -24,8 +25,6 @@ interface Participant {
   paid_confirmed: number;
   paid_pending: number;
 }
-
-const SPECIES_ID: Record<Species, string> = { cattle: 'Sapi', goat: 'Kambing', sheep: 'Domba' };
 
 export function QurbanParticipants() {
   const { data = [], isLoading, isError } = useQuery({

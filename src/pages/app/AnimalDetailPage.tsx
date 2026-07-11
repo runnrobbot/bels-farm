@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { ConfirmDialog } from '@/components/feedback/ConfirmDialog';
-import { Skeleton, SkeletonText } from '@/components/ui/Skeleton';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { ActivityTimeline } from '@/components/data/ActivityTimeline';
 import { WeightChart } from '@/features/livestock/components/WeightChart';
 import { AnimalForm } from '@/features/livestock/components/AnimalForm';
@@ -48,8 +48,16 @@ export default function AnimalDetailPage() {
       <div className="space-y-6">
         <Skeleton className="h-8 w-48" />
         <div className="grid gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-1"><SkeletonText lines={6} /></Card>
-          <Card className="lg:col-span-2"><SkeletonText lines={8} /></Card>
+          <Card className="lg:col-span-1">
+            <div className="space-y-2">
+              {[6,5,4,3,2,1].map(i => <Skeleton key={i} className={i === 1 ? 'w-2/3' : 'w-full'} />)}
+            </div>
+          </Card>
+          <Card className="lg:col-span-2">
+            <div className="space-y-2">
+              {[8,7,6,5,4,3,2,1].map(i => <Skeleton key={i} className={i === 1 ? 'w-2/3' : 'w-full'} />)}
+            </div>
+          </Card>
         </div>
       </div>
     );

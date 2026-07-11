@@ -1,35 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { toAppError } from '@/lib/errors';
-
-/**
- * Downscale + convert an image to WebP on the client before upload. Keeps stored
- * assets small (faster public site, lower bandwidth) without a server step.
- * Falls back to the original file if the browser can't encode WebP.
- */
-async function compressToWebp(file: File, maxDimension = 1280, quality = 0.82): Promise<Blob> {
-  if (!file.type.startsWith('image/')) return file;
-  try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
-    const width = Math.round(bitmap.width * scale);
-    const height = Math.round(bitmap.height * scale);
-
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return file;
-    ctx.drawImage(bitmap, 0, 0, width, height);
-    bitmap.close();
-
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, 'image/webp', quality),
-    );
-    return blob ?? file;
-  } catch {
-    return file;
-  }
-}
+import { compressToWebp } from './compress';
 
 export interface UploadResult {
   path: string;
@@ -45,7 +16,7 @@ export async function uploadPublicImage(
   folder: string,
   bucket = 'public-assets',
 ): Promise<UploadResult> {
-  const blob = await compressToWebp(file);
+  const blob = await compressToWebp(file, 1280, 0.82);
   const path = `${folder}/${crypto.randomUUID()}.webp`;
 
   const { error } = await supabase.storage.from(bucket).upload(path, blob, {

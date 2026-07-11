@@ -32,6 +32,4 @@ export const env = {
   supabaseAnonKey: parsed.data.VITE_SUPABASE_ANON_KEY,
   whatsappNumber: parsed.data.VITE_WHATSAPP_NUMBER ?? '',
   siteUrl: parsed.data.VITE_SITE_URL ?? window.location.origin,
-  isDev: import.meta.env.DEV,
-  isProd: import.meta.env.PROD,
 } as const;

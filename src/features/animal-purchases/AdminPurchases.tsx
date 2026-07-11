@@ -1,8 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, X, Inbox, Eye, ImageOff, MessageCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
-import { toAppError } from '@/lib/errors';
 import { DataTable, type Column } from '@/components/data/DataTable';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -10,73 +7,22 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
 import { toast } from '@/stores/toastStore';
-import { formatCurrency } from '@/lib/utils';
-import { whatsappLink } from '@/lib/utils';
+import { formatCurrency, whatsappLink } from '@/lib/utils';
 import { format } from 'date-fns';
 import { SPECIES_ID } from '@/features/marketing/species';
-import type { AnimalSaleRow } from './service';
+import { usePendingAnimalPurchases, useApproveAnimalPurchase, type AnimalSaleRow } from './service';
 
 export function AdminPurchases() {
-  const qc = useQueryClient();
   const [preview, setPreview] = useState<AnimalSaleRow | null>(null);
-  const [deciding, setDeciding] = useState(false);
-
-  const { data = [], isLoading } = useQuery({
-    queryKey: ['animal-purchases'],
-    queryFn: async (): Promise<AnimalSaleRow[]> => {
-      const { data, error } = await supabase
-        .from('animal_sales')
-        .select(`
-          id,
-          animal_id,
-          amount,
-          status,
-          proof_path,
-          notes,
-          created_at,
-          approved_by,
-          approved_at,
-          rejected_at,
-          rejected_reason,
-          customers!inner(full_name, whatsapp),
-          animals!inner(name, species)
-        `)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
-      if (error) throw toAppError(error);
-      return (data ?? []).map((r: any) => ({
-        id: r.id,
-        animal_id: r.animal_id,
-        animal_name: r.animals?.name ?? null,
-        animal_species: r.animals?.species,
-        customer_name: r.customers?.full_name,
-        customer_whatsapp: r.customers?.whatsapp,
-        amount: r.amount,
-        status: r.status,
-        proof_path: r.proof_path,
-        notes: r.notes,
-        created_at: r.created_at,
-        approved_by: r.approved_by,
-        approved_at: r.approved_at,
-        rejected_at: r.rejected_at,
-        rejected_reason: r.rejected_reason,
-      }));
-    },
-    refetchInterval: 30_000,
-  });
+  const { data = [], isLoading } = usePendingAnimalPurchases();
+  const approveMutation = useApproveAnimalPurchase();
 
   const decide = async (id: string, approve: boolean) => {
-    setDeciding(true);
     try {
-      const { error } = await supabase.rpc('animal_sale_decide', { p_id: id, p_approve: approve });
-      if (error) throw toAppError(error);
-      await qc.invalidateQueries({ queryKey: ['animal-purchases'] });
-      toast.success(approve ? 'Pembelian disetujui' : 'Pembelian ditolak');
+      await approveMutation.mutateAsync({ id, approve });
       setPreview(null);
-    } catch (error) {
-      toast.fromError(error, 'Gagal memproses');
-    } finally {
-      setDeciding(false);
+    } catch {
+      toast.fromError(new Error('Gagal memproses'), 'Gagal memproses');
     }
   };
 
@@ -127,7 +73,7 @@ export function AdminPurchases() {
       {preview && (
         <PreviewModal
           sale={preview}
-          deciding={deciding}
+          deciding={approveMutation.isPending}
           onClose={() => setPreview(null)}
           onDecide={(approve) => void decide(preview.id, approve)}
         />
@@ -153,20 +99,21 @@ function PreviewModal({
   useEffect(() => {
     let active = true;
     setLoadingProof(true);
-    if (!sale.proof_path) {
+    const path = sale.proof_path;
+    if (!path) {
       setProofUrl(null);
       setLoadingProof(false);
       return;
     }
-    void supabase.storage.from('qurban-proofs').createSignedUrl(sale.proof_path, 300).then(({ data, error }) => {
-      if (active) {
-        setProofUrl(error ? null : data?.signedUrl ?? null);
-        setLoadingProof(false);
-      }
-    });
-    return () => {
-      active = false;
-    };
+    void import('@/lib/supabase/client').then(({ supabase }) =>
+      supabase.storage.from('qurban-proofs').createSignedUrl(path, 300).then(({ data, error }) => {
+        if (active) {
+          setProofUrl(error ? null : data?.signedUrl ?? null);
+          setLoadingProof(false);
+        }
+      }),
+    );
+    return () => { active = false; };
   }, [sale.proof_path]);
 
   const rows = [

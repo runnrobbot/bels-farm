@@ -3,7 +3,6 @@ import type { ErrorInfo, ReactNode } from 'react';
 import { AlertOctagon, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { toAppError } from '@/lib/errors';
-import { env } from '@/config/env';
 
 interface Props {
   children: ReactNode;
@@ -27,7 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   override componentDidCatch(error: Error, info: ErrorInfo) {
-    if (env.isDev) {
+    if (import.meta.env.DEV) {
       console.error('[ErrorBoundary]', error, info.componentStack);
     }
   }
