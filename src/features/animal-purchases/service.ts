@@ -31,9 +31,14 @@ export interface AnimalSaleRow {
 async function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      // Strip the "data:image/...;base64," prefix — backend expects raw base64 only
+      const base64 = dataUrl.replace(/^data:[^;]+;base64,/, '');
+      resolve(base64);
+    };
     reader.onerror = reject;
-    reader.readAsDataURL(file); // includes mime type prefix
+    reader.readAsDataURL(file);
   });
 }
 
