@@ -12,7 +12,7 @@ export interface AnimalSaleRow {
   animal_id: string;
   animal_name: string | null;
   animal_species: Species;
-  customer_name: string;
+  customer_name: string | null;
   customer_whatsapp: string | null;
   amount: number;
   status: PaymentStatus;
@@ -22,7 +22,6 @@ export interface AnimalSaleRow {
   approved_by: string | null;
   approved_at: string | null;
   rejected_at: string | null;
-  rejected_reason: string | null;
 }
 
 // --- Helpers ---
@@ -99,8 +98,7 @@ export function usePendingAnimalPurchases() {
           approved_by,
           approved_at,
           rejected_at,
-          rejected_reason,
-          customers!inner(full_name, whatsapp),
+          customers(full_name, whatsapp),
           animals!inner(name, species)
         `)
         .eq('status', 'pending')
@@ -121,7 +119,6 @@ export function usePendingAnimalPurchases() {
         approved_by: r.approved_by,
         approved_at: r.approved_at,
         rejected_at: r.rejected_at,
-        rejected_reason: r.rejected_reason,
       }));
     },
   });
