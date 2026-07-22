@@ -43,7 +43,6 @@ interface ResourceOptions {
   select?: string;
   /** Whether the table has a deleted_at column (enables soft delete + filter). */
   softDelete?: boolean;
-  /** Default ordering column. */
   orderBy?: string;
   ascending?: boolean;
   /** Columns matched (ilike) by the free-text `search` param. */
