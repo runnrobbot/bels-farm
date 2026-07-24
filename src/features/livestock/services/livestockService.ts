@@ -22,6 +22,15 @@ export interface AnimalPage {
 
 const LIST_SELECT = '*, breed:breeds(name)';
 
+/**
+ * Remove characters that are structural inside a PostgREST `.or()` filter
+ * (comma separates conditions, parentheses group them). Without this a search
+ * like "3,5 kg" or "(afkir)" breaks the query or injects filter logic.
+ */
+function sanitizeSearchTerm(term: string): string {
+  return term.replace(/[,()]/g, '').trim();
+}
+
 export const livestockService = {
   async list(filters: AnimalFilters, branchId: string | null): Promise<AnimalPage> {
     const from = filters.page * filters.pageSize;
@@ -37,8 +46,9 @@ export const livestockService = {
     if (branchId) query = query.eq('branch_id', branchId);
     if (filters.species && filters.species !== 'all') query = query.eq('species', filters.species);
     if (filters.status && filters.status !== 'all') query = query.eq('status', filters.status);
-    if (filters.search?.trim()) {
-      const term = `%${filters.search.trim()}%`;
+    const search = filters.search ? sanitizeSearchTerm(filters.search) : '';
+    if (search) {
+      const term = `%${search}%`;
       query = query.or(`ear_tag.ilike.${term},name.ilike.${term},barcode.ilike.${term}`);
     }
 

@@ -50,6 +50,17 @@ interface ResourceOptions {
 }
 
 /**
+ * Strip characters that have structural meaning inside a PostgREST `.or()`
+ * filter string. A raw comma splits conditions and parentheses group them, so a
+ * user typing "3,5 kg" or "(afkir)" would otherwise break the query or inject
+ * unintended filter logic. We remove them rather than escape because they carry
+ * no search value here.
+ */
+function sanitizeSearchTerm(term: string): string {
+  return term.replace(/[,()]/g, '').trim();
+}
+
+/**
  * Factory producing typed CRUD operations for a single table. Centralizes
  * pagination, free-text search, soft delete and error normalization so feature
  * services/hooks stay declarative.
@@ -82,7 +93,7 @@ export function createResource<T extends TableName>(table: T, options: ResourceO
         }
       }
 
-      const term = params.search?.trim();
+      const term = params.search ? sanitizeSearchTerm(params.search) : '';
       if (term && searchColumns.length > 0) {
         f.or(searchColumns.map((c) => `${c}.ilike.%${term}%`).join(','));
       }
