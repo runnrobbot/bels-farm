@@ -41,7 +41,11 @@ export type AnimalFormValues = z.infer<typeof animalSchema>;
 export interface AnimalFilters {
   search?: string;
   species?: (typeof SPECIES)[number] | 'all';
-  status?: (typeof STATUSES)[number] | 'all';
+  // 'in_stock' is a virtual filter that expands to all IN_STOCK_STATUSES
+  // (active + reserved + quarantine) in livestockService.list, so that live
+  // animals never silently disappear from the default view. 'all' shows every
+  // status including sold/deceased/transferred.
+  status?: (typeof STATUSES)[number] | 'all' | 'in_stock';
   page: number;
   pageSize: number;
 }
@@ -49,7 +53,7 @@ export interface AnimalFilters {
 export const DEFAULT_FILTERS: AnimalFilters = {
   search: '',
   species: 'all',
-  status: 'active',
+  status: 'in_stock',
   page: 0,
   pageSize: 25,
 };
