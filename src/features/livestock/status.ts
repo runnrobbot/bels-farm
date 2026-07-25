@@ -23,10 +23,13 @@ export const TERMINAL_STATUSES = ['sold', 'deceased', 'transferred'] as const;
 
 export type InStockStatus = (typeof IN_STOCK_STATUSES)[number];
 
-/** Mutable copies for Supabase `.in()` filters, which expect a plain string[]. */
-export const IN_STOCK_STATUS_LIST: string[] = [...IN_STOCK_STATUSES];
-export const SELLABLE_STATUS_LIST: string[] = [...SELLABLE_STATUSES];
-export const TERMINAL_STATUS_LIST: string[] = [...TERMINAL_STATUSES];
+/**
+ * Mutable copies typed as AnimalStatus[] for Supabase `.in('status', ...)`
+ * filters, which require the column's enum type (not a plain string[]).
+ */
+export const IN_STOCK_STATUS_LIST: AnimalStatus[] = [...IN_STOCK_STATUSES];
+export const SELLABLE_STATUS_LIST: AnimalStatus[] = [...SELLABLE_STATUSES];
+export const TERMINAL_STATUS_LIST: AnimalStatus[] = [...TERMINAL_STATUSES];
 
 export function isInStock(status: AnimalStatus | null | undefined): boolean {
   return status != null && (IN_STOCK_STATUSES as readonly string[]).includes(status);
