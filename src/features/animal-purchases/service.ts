@@ -175,7 +175,7 @@ export function useSubmitAnimalPurchase() {
       const { error } = await supabase.rpc('animal_sale_submit', {
         p_animal_id: input.animalId,
         p_amount: input.amount,
-        p_customer_id: input.customerId ?? null,
+        p_customer_id: input.customerId ?? '',
         p_proof: proofPath,
         p_notes: notes,
       });
