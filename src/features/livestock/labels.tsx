@@ -7,13 +7,18 @@ export const SPECIES_LABEL: Record<Species, string> = {
   sheep: 'Sheep',
 };
 
+/**
+ * Status hewan dalam bahasa Indonesia. `reserved` sengaja dilabeli "Dipesan"
+ * supaya hewan yang sedang dikunci oleh pengajuan pembelian terlihat jelas
+ * berbeda dari "Aktif" — sebelumnya keduanya sulit dibedakan sekilas.
+ */
 export const STATUS_LABEL: Record<AnimalStatus, string> = {
-  active: 'Active',
-  sold: 'Sold',
-  deceased: 'Deceased',
-  transferred: 'Transferred',
-  reserved: 'Reserved',
-  quarantine: 'Quarantine',
+  active: 'Aktif',
+  sold: 'Terjual',
+  deceased: 'Mati',
+  transferred: 'Dipindahkan',
+  reserved: 'Dipesan',
+  quarantine: 'Karantina',
 };
 
 export const STATUS_TONE: Record<AnimalStatus, NonNullable<BadgeProps['tone']>> = {

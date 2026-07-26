@@ -4,7 +4,7 @@ import { toAppError } from '@/lib/errors';
 import { compressToWebp } from '@/lib/compress';
 import { queryKeys } from '@/lib/query/queryKeys';
 import { toast } from '@/stores/toastStore';
-import type { PaymentStatus, Species } from '@/types/database';
+import type { AnimalStatus, PaymentStatus, Species } from '@/types/database';
 
 // --- Types ---
 
@@ -13,6 +13,8 @@ export interface AnimalSaleRow {
   animal_id: string;
   animal_name: string | null;
   animal_species: Species;
+  /** Status hewan saat ini — dipakai untuk memverifikasi hewan benar terkunci ('reserved') sebelum disetujui. */
+  animal_status: AnimalStatus;
   customer_name: string | null;
   customer_whatsapp: string | null;
   amount: number;
@@ -86,6 +88,10 @@ const KEY = ['animal-purchases'] as const;
  * A sale changes animal status server-side (via the animal_sale_* RPCs), so any
  * mutation must refresh the livestock list/detail and dashboard caches too —
  * otherwise Ternak/Dashboard show stale data until a manual refresh.
+ *
+ * `queryKeys.animals.all` also covers each animal's timeline query, so the
+ * status-history ledger shown in the review modal refreshes right after a
+ * decision.
  */
 function invalidateSaleRelatedQueries(qc: ReturnType<typeof useQueryClient>) {
   void qc.invalidateQueries({ queryKey: KEY });
@@ -111,7 +117,7 @@ export function usePendingAnimalPurchases() {
           approved_at,
           rejected_at,
           customers(full_name, whatsapp),
-          animals!inner(name, species)
+          animals!inner(name, species, status)
         `)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
@@ -121,6 +127,7 @@ export function usePendingAnimalPurchases() {
         animal_id: r.animal_id,
         animal_name: r.animals?.name ?? null,
         animal_species: r.animals?.species,
+        animal_status: r.animals?.status,
         customer_name: r.customers?.full_name,
         customer_whatsapp: r.customers?.whatsapp,
         amount: r.amount,

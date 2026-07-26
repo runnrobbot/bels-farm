@@ -6,6 +6,9 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Badge } from '@/components/ui/Badge';
+import { ActivityTimeline } from '@/components/data/ActivityTimeline';
+import { useAnimalTimeline } from '@/features/livestock/hooks/useAnimals';
+import { STATUS_LABEL, STATUS_TONE } from '@/features/livestock/labels';
 import { toast } from '@/stores/toastStore';
 import { formatCurrency, whatsappLink } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -35,6 +38,18 @@ export function AdminPurchases() {
           {p.animal_name ?? p.animal_id.slice(0, 8)} <span className="text-muted-foreground">({SPECIES_ID[p.animal_species]})</span>
         </span>
       ),
+    },
+    {
+      key: 'animal_status',
+      header: 'Status hewan',
+      render: (p) =>
+        p.animal_status ? (
+          <Badge tone={STATUS_TONE[p.animal_status]} dot>
+            {STATUS_LABEL[p.animal_status]}
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
     },
     { key: 'customer', header: 'Pelanggan', render: (p) => <span className="font-medium text-foreground">{p.customer_name}</span> },
     { key: 'amount', header: 'Nominal', align: 'right', render: (p) => <span className="font-semibold tabular-nums">{formatCurrency(p.amount)}</span> },
@@ -95,6 +110,9 @@ function PreviewModal({
 }) {
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [loadingProof, setLoadingProof] = useState(true);
+  // Riwayat status/aktivitas hewan — supaya admin bisa melihat apakah hewan ini
+  // pernah diajukan/diproses sebelumnya sebelum menyetujui pembelian.
+  const { data: history = [], isLoading: loadingHistory } = useAnimalTimeline(sale.animal_id);
 
   useEffect(() => {
     let active = true;
@@ -124,12 +142,17 @@ function PreviewModal({
     ...(sale.notes ? [{ label: 'Catatan', value: sale.notes }] : []),
   ];
 
+  // Pengajuan yang sehat selalu mengunci hewan jadi 'reserved'. Kalau bukan,
+  // ada yang tidak wajar (mis. hewan sudah terjual di jalur lain) — beri tanda
+  // sebelum admin menekan Setujui.
+  const statusMismatch = Boolean(sale.animal_status) && sale.animal_status !== 'reserved';
+
   return (
     <Modal
       open
       onClose={onClose}
       title="Tinjau pembelian hewan"
-      description="Periksa detail dan bukti transfer sebelum mengambil keputusan."
+      description="Periksa detail, riwayat hewan, dan bukti transfer sebelum mengambil keputusan."
       size="md"
       footer={
         <>
@@ -160,7 +183,39 @@ function PreviewModal({
               <dd className="font-medium text-foreground">{r.value}</dd>
             </div>
           ))}
+          {sale.animal_status && (
+            <div className="flex items-center justify-between px-4 py-2.5 text-sm">
+              <dt className="text-muted-foreground">Status hewan</dt>
+              <dd>
+                <Badge tone={STATUS_TONE[sale.animal_status]} dot>
+                  {STATUS_LABEL[sale.animal_status]}
+                </Badge>
+              </dd>
+            </div>
+          )}
         </dl>
+
+        {statusMismatch && (
+          <div className="rounded-lg border border-border bg-surface-sunken px-3 py-2.5 text-xs text-muted-foreground">
+            Hewan ini berstatus <span className="font-medium text-foreground">{STATUS_LABEL[sale.animal_status]}</span>, bukan
+            {' '}<span className="font-medium text-foreground">Dipesan</span>. Pengajuan yang normal selalu mengunci hewan jadi
+            Dipesan — periksa riwayat di bawah dulu sebelum menyetujui.
+          </div>
+        )}
+
+        <div>
+          <p className="mb-2 text-sm font-medium text-foreground">Riwayat hewan</p>
+          {loadingHistory ? (
+            <div className="space-y-2">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ) : (
+            <div className="max-h-64 overflow-y-auto rounded-lg border border-border p-3">
+              <ActivityTimeline events={history} />
+            </div>
+          )}
+        </div>
 
         <div>
           <p className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">

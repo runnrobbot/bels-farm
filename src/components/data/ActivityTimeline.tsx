@@ -8,6 +8,11 @@ import {
   ArrowRightLeft,
   Tag,
   Circle,
+  RefreshCw,
+  BookmarkCheck,
+  Ban,
+  Skull,
+  ShieldAlert,
   type LucideIcon,
 } from 'lucide-react';
 import type { ActivityEventRow } from '@/types/database';
@@ -22,6 +27,13 @@ const VERB_ICON: Record<string, LucideIcon> = {
   disease: Stethoscope,
   ownership_transferred: ArrowRightLeft,
   sold: Tag,
+  // Transisi status dari ledger riwayat hewan
+  status_changed: RefreshCw,
+  reserved: BookmarkCheck,
+  sale_rejected: Ban,
+  deceased: Skull,
+  transferred: ArrowRightLeft,
+  quarantine: ShieldAlert,
 };
 
 const VERB_TONE: Record<string, string> = {
@@ -29,6 +41,10 @@ const VERB_TONE: Record<string, string> = {
   vaccinated: 'bg-info/12 text-info',
   weight_updated: 'bg-success/12 text-success',
   sold: 'bg-accent/12 text-accent',
+  status_changed: 'bg-info/12 text-info',
+  reserved: 'bg-warning/12 text-warning',
+  sale_rejected: 'bg-muted text-muted-foreground',
+  quarantine: 'bg-danger/12 text-danger',
 };
 
 /** GitHub-style vertical activity feed for any entity. */
