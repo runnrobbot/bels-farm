@@ -75,6 +75,47 @@ export function useEmployeeOptions() {
   });
 }
 
+/** Suppliers for restock selects. */
+export function useSupplierOptions() {
+  return useQuery({
+    queryKey: ['options', 'suppliers'],
+    queryFn: async (): Promise<Option[]> => {
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('id, name')
+        .is('deleted_at', null)
+        .order('name');
+      if (error) throw toAppError(error);
+      return (data ?? []).map((s) => ({ value: s.id, label: s.name }));
+    },
+    staleTime: FIVE_MIN,
+  });
+}
+
+/**
+ * Inventory items in the "feed" category, for linking a feeding record to the
+ * stock item whose quantity should be drawn down.
+ */
+export function useFeedItemOptions() {
+  return useQuery({
+    queryKey: ['options', 'feed-items'],
+    queryFn: async (): Promise<Option[]> => {
+      const { data, error } = await supabase
+        .from('inventory_items')
+        .select('id, name, unit, quantity')
+        .is('deleted_at', null)
+        .eq('category', 'feed')
+        .order('name');
+      if (error) throw toAppError(error);
+      return (data ?? []).map((i) => ({
+        value: i.id,
+        label: `${i.name} · sisa ${Number(i.quantity).toLocaleString('id-ID')} ${i.unit}`,
+      }));
+    },
+    staleTime: FIVE_MIN,
+  });
+}
+
 /** Build a quick id→label lookup from an options array (for table cells). */
 export function optionMap(options: Option[]): Map<string, string> {
   return new Map(options.map((o) => [o.value, o.label]));
