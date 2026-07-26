@@ -6,13 +6,13 @@ import type { Column } from '@/components/data/DataTable';
 import type { FieldDef } from '@/components/data/CrudFormModal';
 import { createResource } from '@/lib/crud/resource';
 import { createResourceHooks } from '@/lib/crud/useResource';
-import { useAnimalOptions, usePenOptions, optionMap } from '@/features/shared/options';
+import { useAnimalOptions, usePenOptions, useFeedItemOptions, optionMap } from '@/features/shared/options';
 import { useBranches } from '@/hooks/useBranches';
 import { useUiStore } from '@/stores/uiStore';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { emptyToNull, formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
-import type { FeedingRecordRow } from '@/types/database';
+import type { FeedingRecordRow, InsertDto, UpdateDto } from '@/types/database';
 
 const resource = createResource('feeding_records', { searchColumns: ['feed_type'], orderBy: 'fed_at' });
 const hooks = createResourceHooks(resource, { label: 'Catatan pakan' });
@@ -21,6 +21,7 @@ const schema = z
   .object({
     animal_id: z.string().uuid().optional().or(z.literal('')),
     pen_id: z.string().uuid().optional().or(z.literal('')),
+    item_id: z.string().uuid().optional().or(z.literal('')),
     feed_type: z.string().min(2, 'Jenis pakan wajib diisi'),
     quantity: z.coerce.number().min(0, 'Jumlah tidak valid'),
     unit: z.string().min(1, 'Satuan wajib diisi'),
@@ -42,6 +43,7 @@ export default function FeedingPage() {
 
   const { data: animals = [] } = useAnimalOptions();
   const { data: pens = [] } = usePenOptions();
+  const { data: feedItems = [] } = useFeedItemOptions();
   const animalLabels = useMemo(() => optionMap(animals), [animals]);
   const penLabels = useMemo(() => optionMap(pens), [pens]);
 
@@ -50,13 +52,21 @@ export default function FeedingPage() {
       { name: 'animal_id', label: 'Hewan', type: 'select', placeholder: 'Per hewan (opsional)', options: animals },
       { name: 'pen_id', label: 'Kandang', type: 'select', placeholder: 'Per kandang (opsional)', options: pens },
       { name: 'feed_type', label: 'Jenis pakan', type: 'text', required: true, placeholder: 'mis. Rumput gajah' },
+      {
+        name: 'item_id',
+        label: 'Potong dari stok pakan',
+        type: 'select',
+        placeholder: 'Tidak memotong stok',
+        options: feedItems,
+        hint: 'Jika dipilih, stok item pakan otomatis berkurang sesuai jumlah',
+      },
       { name: 'quantity', label: 'Jumlah', type: 'number', step: '0.1', required: true },
       { name: 'unit', label: 'Satuan', type: 'text', placeholder: 'kg' },
       { name: 'cost', label: 'Biaya (Rp)', type: 'number', step: '1000' },
       { name: 'fed_at', label: 'Tanggal', type: 'date', required: true },
       { name: 'notes', label: 'Catatan', type: 'textarea' },
     ],
-    [animals, pens],
+    [animals, pens, feedItems],
   );
 
   const columns: Column<FeedingRecordRow>[] = [
@@ -91,6 +101,7 @@ export default function FeedingPage() {
       toFormValues={(r) => ({
         animal_id: r?.animal_id ?? '',
         pen_id: r?.pen_id ?? '',
+        item_id: (r as { item_id?: string | null } | null)?.item_id ?? '',
         feed_type: r?.feed_type ?? '',
         quantity: r?.quantity ?? 0,
         unit: r?.unit ?? 'kg',
@@ -98,8 +109,8 @@ export default function FeedingPage() {
         fed_at: r?.fed_at ? r.fed_at.slice(0, 10) : new Date().toISOString().slice(0, 10),
         notes: r?.notes ?? '',
       })}
-      toCreate={(v) => ({ ...emptyToNull(v), branch_id: branchId, recorded_by: profile?.id ?? null })}
-      toUpdate={(v) => emptyToNull(v)}
+      toCreate={(v) => ({ ...emptyToNull(v), branch_id: branchId, recorded_by: profile?.id ?? null }) as InsertDto<'feeding_records'>}
+      toUpdate={(v) => emptyToNull(v) as UpdateDto<'feeding_records'>}
       deleteText={() => 'Catatan pakan akan diarsipkan.'}
     />
   );

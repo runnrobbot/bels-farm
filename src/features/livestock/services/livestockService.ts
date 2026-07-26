@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase/client';
 import { toAppError, unwrap } from '@/lib/errors';
 import { castAs } from '@/lib/utils';
 import type { AnimalFilters } from '../schema';
+import { IN_STOCK_STATUS_LIST } from '../status';
 import type {
   AnimalRow,
   ActivityEventRow,
@@ -45,7 +46,14 @@ export const livestockService = {
 
     if (branchId) query = query.eq('branch_id', branchId);
     if (filters.species && filters.species !== 'all') query = query.eq('species', filters.species);
-    if (filters.status && filters.status !== 'all') query = query.eq('status', filters.status);
+    // 'in_stock' expands to the shared IN_STOCK_STATUSES set so active, reserved
+    // and quarantine animals all stay visible by default; 'all' applies no status
+    // filter; anything else is an exact status match.
+    if (filters.status === 'in_stock') {
+      query = query.in('status', IN_STOCK_STATUS_LIST);
+    } else if (filters.status && filters.status !== 'all') {
+      query = query.eq('status', filters.status);
+    }
     const search = filters.search ? sanitizeSearchTerm(filters.search) : '';
     if (search) {
       const term = `%${search}%`;

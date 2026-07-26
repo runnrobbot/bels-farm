@@ -98,6 +98,7 @@ export default function LivestockPage() {
               setFilters((f) => ({ ...f, status: e.target.value as AnimalFilters['status'], page: 0 }))
             }
             options={[
+              { value: 'in_stock', label: 'In stock' },
               { value: 'all', label: 'All statuses' },
               ...STATUSES.map((s) => ({ value: s, label: STATUS_LABEL[s] })),
             ]}
