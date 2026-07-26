@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { toAppError } from '@/lib/errors';
 import { compressToWebp } from '@/lib/compress';
+import { queryKeys } from '@/lib/query/queryKeys';
 import { toast } from '@/stores/toastStore';
 import type { PaymentStatus, Species } from '@/types/database';
 
@@ -81,6 +82,17 @@ async function uploadAnimalPurchaseProof(file: File): Promise<string> {
 
 const KEY = ['animal-purchases'] as const;
 
+/**
+ * A sale changes animal status server-side (via the animal_sale_* RPCs), so any
+ * mutation must refresh the livestock list/detail and dashboard caches too —
+ * otherwise Ternak/Dashboard show stale data until a manual refresh.
+ */
+function invalidateSaleRelatedQueries(qc: ReturnType<typeof useQueryClient>) {
+  void qc.invalidateQueries({ queryKey: KEY });
+  void qc.invalidateQueries({ queryKey: queryKeys.animals.all });
+  void qc.invalidateQueries({ queryKey: ['dashboard'] });
+}
+
 export function usePendingAnimalPurchases() {
   return useQuery({
     queryKey: KEY,
@@ -132,7 +144,7 @@ export function useApproveAnimalPurchase() {
       if (error) throw toAppError(error);
     },
     onSuccess: (_, { approve }) => {
-      void qc.invalidateQueries({ queryKey: KEY });
+      invalidateSaleRelatedQueries(qc);
       toast.success(approve ? 'Pembelian disetujui' : 'Pembelian ditolak');
     },
     onError: (e) => toast.fromError(e, 'Gagal memproses'),
@@ -170,7 +182,7 @@ export function useSubmitAnimalPurchase() {
       if (error) throw toAppError(error);
     },
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: KEY });
+      invalidateSaleRelatedQueries(qc);
       toast.success('Permintaan terkirim', 'Menunggu konfirmasi admin.');
     },
     onError: (e) => toast.fromError(e, 'Gagal mengirim'),
