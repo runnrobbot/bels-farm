@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { toAppError } from '@/lib/errors';
+import { IN_STOCK_STATUS_LIST } from '@/features/livestock/status';
 import type { AnimalSex } from '@/types/database';
 
 export interface Option {
@@ -13,10 +14,15 @@ const FIVE_MIN = 5 * 60_000;
 /**
  * Real animal options for selects (no mock data). Optionally filter by sex —
  * used for choosing dam (female) / sire (male) in the breeding module.
+ *
+ * By default only in-stock animals (active / reserved / quarantine) are
+ * returned, so sold, deceased or transferred animals never appear as
+ * selectable in feeding, breeding or health forms. Pass `includeAllStatuses`
+ * when a form genuinely needs the full roster (e.g. a historical/audit view).
  */
-export function useAnimalOptions(opts?: { sex?: AnimalSex }) {
+export function useAnimalOptions(opts?: { sex?: AnimalSex; includeAllStatuses?: boolean }) {
   return useQuery({
-    queryKey: ['options', 'animals', opts?.sex ?? 'all'],
+    queryKey: ['options', 'animals', opts?.sex ?? 'all', opts?.includeAllStatuses ? 'any' : 'in_stock'],
     queryFn: async (): Promise<Option[]> => {
       let query = supabase
         .from('animals')
@@ -24,6 +30,7 @@ export function useAnimalOptions(opts?: { sex?: AnimalSex }) {
         .is('deleted_at', null)
         .order('ear_tag')
         .limit(500);
+      if (!opts?.includeAllStatuses) query = query.in('status', IN_STOCK_STATUS_LIST);
       if (opts?.sex) query = query.eq('sex', opts.sex);
       const { data, error } = await query;
       if (error) throw toAppError(error);
